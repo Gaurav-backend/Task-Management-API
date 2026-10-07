@@ -1,0 +1,23 @@
+[project]
+name = "task-management-api"
+version = "0.1.0"
+description = "A task management REST API built with FastAPI and PostgreSQL"
+requires-python = ">=3.13"
+
+dependencies = [
+    "fastapi[standard]",
+    "sqlalchemy",
+    "psycopg[binary]",
+    "alembic",
+    "pydantic-settings",
+]
+
+[dependency-groups]
+dev = [
+    "pytest",
+    "httpx",
+    "httpx2",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
