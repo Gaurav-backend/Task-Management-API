@@ -167,7 +167,7 @@ The `.gitignore` file already excludes it.
 Clone the repository:
 
 ```bash
-git clone <your-repository-url>
+git clone https://github.com/Gaurav-backend/Task-Management-API.git
 cd task-management-api
 ```
 
