@@ -2,24 +2,34 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models.task import Task
-
+from app.schemas.task import TaskCreate
 
 class TaskRepository:
 
-    def get_by_id(self, db: Session, task_id: int):
+
+    def get_by_id(self,db: Session,task_id: int,owner_id: int):
         return db.scalar(
-            select(Task).where(Task.id == task_id)
+            select(Task).where(Task.id == task_id,
+                Task.owner_id == owner_id,
+            )
         )
 
-    def get_all(self, db: Session):
+    def get_all(self, db: Session, owner_id: int):
         return db.scalars(
-            select(Task)
+            select(Task).where(Task.owner_id == owner_id)
         ).all()
 
-    def create(self, db: Session, title: str, description: str | None):
+    def create(
+        self,
+        db: Session,
+        task_data: TaskCreate,
+        owner_id: int,
+    ) -> Task:
+
         new_task = Task(
-            title=title,
-            description=description,
+        title=task_data.title,
+        description=task_data.description,
+        owner_id=owner_id,
         )
 
         db.add(new_task)
@@ -50,6 +60,10 @@ class TaskRepository:
 
         return task
 
-    def delete(self, db: Session, task: Task):
+    def delete(
+        self,
+        db: Session,
+        task: Task,
+    ):
         db.delete(task)
         db.commit()

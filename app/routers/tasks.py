@@ -5,11 +5,15 @@ from app.database.database import get_db
 from app.repositories.task_repository import TaskRepository
 from app.schemas.task import TaskCreate, TaskResponse, TaskUpdate
 
+from app.core.security import get_current_active_user
+from app.models.user import User
+
 
 router = APIRouter(
     prefix="/tasks",
     tags=["Tasks"],
 )
+
 
 task_repository = TaskRepository()
 
@@ -22,29 +26,40 @@ task_repository = TaskRepository()
 def create_task(
     task: TaskCreate,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
 ):
-    new_task = task_repository.create(
+    return task_repository.create(
         db=db,
-        title=task.title,
-        description=task.description,
+        task_data=task,
+        owner_id=current_user.id,
     )
 
-    return new_task
 
 
 @router.get("/", response_model=list[TaskResponse])
-def get_tasks(db: Session = Depends(get_db)):
-    tasks = task_repository.get_all(db)
+def get_tasks(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    return task_repository.get_all(
+        db=db,
+        owner_id=current_user.id,
+    )
 
-    return tasks
+
 
 
 @router.get("/{task_id}", response_model=TaskResponse)
 def get_task(
     task_id: int,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
 ):
-    task = task_repository.get_by_id(db, task_id)
+    task = task_repository.get_by_id(
+        db=db,
+        task_id=task_id,
+        owner_id=current_user.id,
+    )
 
     if task is None:
         raise HTTPException(
@@ -55,13 +70,20 @@ def get_task(
     return task
 
 
+
+
 @router.patch("/{task_id}", response_model=TaskResponse)
 def update_task(
     task_id: int,
     task_update: TaskUpdate,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
 ):
-    task = task_repository.get_by_id(db, task_id)
+    task = task_repository.get_by_id(
+        db=db,
+        task_id=task_id,
+        owner_id=current_user.id,
+    )
 
     if task is None:
         raise HTTPException(
@@ -80,12 +102,22 @@ def update_task(
     return updated_task
 
 
-@router.delete("/{task_id}", status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.delete(
+    "/{task_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
 def delete_task(
     task_id: int,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
 ):
-    task = task_repository.get_by_id(db, task_id)
+    task = task_repository.get_by_id(
+        db=db,
+        task_id=task_id,
+        owner_id=current_user.id,
+    )
 
     if task is None:
         raise HTTPException(

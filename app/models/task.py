@@ -1,7 +1,7 @@
 from datetime import datetime, UTC
 from sqlalchemy import Boolean, DateTime, String, Text
-from sqlalchemy.orm import Mapped, mapped_column
-
+from sqlalchemy import ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column , relationship
 from app.database.database import Base
 
 
@@ -15,4 +15,14 @@ class Task(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
         default=lambda: datetime.now(UTC),
+    )
+
+    owner_id: Mapped[int] = mapped_column(
+    ForeignKey("users.id"),
+    nullable=False,
+    )
+
+    owner = relationship(
+    "User",
+    back_populates="tasks",
     )

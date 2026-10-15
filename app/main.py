@@ -4,13 +4,27 @@ from sqlalchemy.orm import Session
 
 from app.database.database import get_db
 from app.routers import tasks
-
+from app.routers import auth
+from app.routers import users
+from app.routers import google_auth
+from starlette.middleware.sessions import SessionMiddleware
+from app.config import settings
 
 app = FastAPI()
 
 
 app.include_router(tasks.router)
+app.include_router(auth.router)
+app.include_router(users.router)
+app.include_router(google_auth.router)
 
+
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=settings.session_secret_key,
+    same_site="lax",
+    https_only=False,  # Local HTTP development only
+)
 
 @app.get("/")
 def root():

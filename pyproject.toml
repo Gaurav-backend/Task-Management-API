@@ -1,3 +1,8 @@
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "task-management-api"
 version = "0.1.0"
@@ -10,14 +15,21 @@ dependencies = [
     "psycopg[binary]",
     "alembic",
     "pydantic-settings",
+    "PyJWT",
+    "pwdlib[argon2]",
+    "Authlib",
+    "httpx2",
+    "itsdangerous",
 ]
 
 [dependency-groups]
 dev = [
     "pytest",
     "httpx",
-    "httpx2",
 ]
+
+[tool.setuptools.packages.find]
+include = ["app*"]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
