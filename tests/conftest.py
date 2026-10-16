@@ -1,3 +1,17 @@
+import os
+from dotenv import dotenv_values
+
+test_env = dotenv_values(".env")
+
+os.environ.setdefault(
+    "DATABASE_URL",
+    test_env.get("DATABASE_URL") or "sqlite:///./test_bootstrap.db",
+)
+os.environ.setdefault(
+    "SECRET_KEY",
+    test_env.get("SECRET_KEY") or "test-only-secret-key",
+)
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -6,7 +20,8 @@ import pytest
 from app.database.database import Base, get_db
 from app.main import app
 from app.models.task import Task
-
+from app.core.security import get_current_active_user
+from app.models.user import User
 
 class TestSettings(BaseSettings):
     TEST_DATABASE_URL: str
@@ -58,16 +73,34 @@ def second_db_session(setup_database):
 
 @pytest.fixture
 def client(db_session):
+    # Create a real user in the test database so the
+    # task's owner_id foreign key points to an existing user.
+    test_user = User(
+        id=1,
+        email="test@example.com",
+        username="testuser",
+        password_hash=None,
+        is_active=True,
+    )
+    db_session.add(test_user)
+    db_session.commit()
+    db_session.refresh(test_user)
+
     def override_get_db():
         yield db_session
 
+    def override_get_current_active_user():
+        return test_user
+
     app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[
+        get_current_active_user
+    ] = override_get_current_active_user
 
     from fastapi.testclient import TestClient
 
-    with TestClient(app) as test_client:
-        yield test_client
-
-    app.dependency_overrides.clear()
-
-
+    try:
+        with TestClient(app) as test_client:
+            yield test_client
+    finally:
+        app.dependency_overrides.clear()

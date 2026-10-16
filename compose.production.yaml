@@ -3,3 +3,30 @@ services:
   api:
     ports: !override
       - "127.0.0.1:8000:8000"
+
+    environment: !override
+      APP_ENV: production
+
+    secrets:
+      - source: database_url
+        target: DATABASE_URL
+      - source: secret_key
+        target: SECRET_KEY
+      - source: google_client_id
+        target: google_client_id
+      - source: google_client_secret
+        target: google_client_secret
+      - source: session_secret_key
+        target: session_secret_key
+
+secrets:
+  database_url:
+    file: ./secrets/database_url
+  secret_key:
+    file: ./secrets/secret_key
+  google_client_id:
+    file: ./secrets/google_client_id
+  google_client_secret:
+    file: ./secrets/google_client_secret
+  session_secret_key:
+    file: ./secrets/session_secret_key
