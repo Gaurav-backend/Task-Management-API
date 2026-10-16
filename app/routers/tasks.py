@@ -9,8 +9,7 @@ from app.schemas.task import TaskCreate, TaskResponse, TaskUpdate
 from app.core.security import get_current_active_user
 from app.models.user import User
 
-logger = logging.getLogger(__name__)
-
+logger = logging.getLogger("uvicorn.error")
 router = APIRouter(
     prefix="/tasks",
     tags=["Tasks"],
