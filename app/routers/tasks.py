@@ -1,3 +1,4 @@
+import logging
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -8,6 +9,7 @@ from app.schemas.task import TaskCreate, TaskResponse, TaskUpdate
 from app.core.security import get_current_active_user
 from app.models.user import User
 
+logger = logging.getLogger(__name__)
 
 router = APIRouter(
     prefix="/tasks",
@@ -16,6 +18,7 @@ router = APIRouter(
 
 
 task_repository = TaskRepository()
+
 
 
 @router.post(
@@ -28,11 +31,27 @@ def create_task(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    return task_repository.create(
-        db=db,
-        task_data=task,
-        owner_id=current_user.id,
-    )
+    try:
+        created_task = task_repository.create(
+            db=db,
+            task_data=task,
+            owner_id=current_user.id,
+        )
+
+        logger.info(
+            "Task created successfully task_id=%s owner_id=%s",
+            created_task.id,
+            current_user.id,
+        )
+
+        return created_task
+
+    except Exception:
+        logger.exception(
+            "Task creation failed owner_id=%s",
+            current_user.id,
+        )
+        raise
 
 
 
