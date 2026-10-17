@@ -722,7 +722,7 @@ def test_update_task_changes_database(
 def test_create_task_is_committed(
     client,
     second_db_session
-    
+
 ):
     response = client.post(
         "/tasks/",
@@ -765,4 +765,24 @@ def test_database_isolation_second(client, setup_database):
 
     assert response.status_code == 200
     assert response.json() == []
-    
+
+
+from sqlalchemy.exc import SQLAlchemyError
+
+
+def test_health_ready_database_unavailable(
+    client,
+    db_session,
+    monkeypatch,
+):
+    def fail_execute(*args, **kwargs):
+        raise SQLAlchemyError("Simulated database failure")
+
+    monkeypatch.setattr(db_session, "execute", fail_execute)
+
+    response = client.get("/health/ready")
+
+    assert response.status_code == 503
+    assert response.json() == {
+        "detail": "Database unavailable"
+    }

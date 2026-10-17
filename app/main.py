@@ -1,4 +1,4 @@
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, HTTPException, status
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
@@ -36,3 +36,22 @@ def health_check(db: Session = Depends(get_db)):
     db.execute(text("SELECT 1"))
 
     return {"status": "healthy"}
+
+
+@app.get("/health/live")
+def liveness_check():
+    return {"status": "alive"}
+
+
+
+@app.get("/health/ready")
+def readiness_check(db: Session = Depends(get_db)):
+    try:
+        db.execute(text("SELECT 1"))
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Database unavailable",
+        )
+
+    return {"status": "ready"}
